@@ -12,10 +12,10 @@ func main() {
 
 	var (
 		flags      = flag.NewFlagSet("fuse", flag.ExitOnError)
-		lndAddress = flags.String("lnd-address", "", "Address of LND Node")
+		lndAddress = flags.String("lnd-address", "localhost:10002", "Address of LND Node")
 		network    = flags.String("btc-network", "regtest", "Bitcoin network to use")
-		macPath    = flags.String("mac-path", "", "Admin macaroon path")
-		tlsPath    = flags.String("tls-path", "", "TLS cert path")
+		macPath    = flags.String("mac-path", "./.fuse/admin.macaroon", "Admin macaroon path")
+		tlsPath    = flags.String("tls-path", "./.fuse/tls.cert", "TLS cert path")
 	)
 
 	client, err := lnd.NewClient(*lndAddress, *network, *macPath, *tlsPath)

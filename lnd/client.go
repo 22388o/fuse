@@ -2,6 +2,7 @@ package lnd
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -26,6 +27,7 @@ func (c LndClient) WalletBalance(ctx context.Context) (btcutil.Amount, error) {
 }
 
 func connect(address, network, macPath, tlsPath string) (lndclient.LightningClient, error) {
+
 	cfg := &lndclient.LndServicesConfig{
 		LndAddress:         address,
 		Network:            lndclient.Network(network),
@@ -38,6 +40,7 @@ func connect(address, network, macPath, tlsPath string) (lndclient.LightningClie
 		func() error {
 			services, err := lndclient.NewLndServices(cfg)
 			if err != nil {
+				fmt.Printf("Failed to connect to LND: %s", err.Error())
 				return err
 			}
 			lnd = services.Client

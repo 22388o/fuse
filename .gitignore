@@ -36,3 +36,4 @@ go.work
 # Fuse
 .fuse
 bin
+.env

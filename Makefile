@@ -11,6 +11,14 @@ network_up:
 network_down:
 	@docker-compose down --remove-orphans
 
+.PHONY: start_lnd
+start_lnd:
+	docker-compose -f ./docker-compose.lnd.yml --env-file ./.env up -d 
+
+.PHONY: stop_lnd
+stop_lnd:
+	docker-compose -f ./docker-compose.lnd.yml down
+
 .PHONY: fund
 fund:
 	./scripts/fund.sh

@@ -4,8 +4,11 @@ import (
 	"flag"
 	"net/http"
 
+	"github.com/btcsuite/btcutil"
 	"github.com/mdedys/fuse/fuse"
+	"github.com/mdedys/fuse/lightning"
 	"github.com/mdedys/fuse/lnd"
+	"github.com/mdedys/fuse/logging"
 )
 
 func main() {
@@ -16,13 +19,16 @@ func main() {
 		network    = flags.String("btc-network", "regtest", "Bitcoin network to use")
 		macPath    = flags.String("mac-path", "./.fuse/admin.macaroon", "Admin macaroon path")
 		tlsPath    = flags.String("tls-path", "./.fuse/tls.cert", "TLS cert path")
+		maxFee     = flags.Int("max-fee", 1000, "Max ln txn fee")
 	)
 
-	client, err := lnd.NewClient(*lndAddress, *network, *macPath, *tlsPath)
+	logging.Configure()
+
+	client, err := lnd.NewClient(*lndAddress, *network, *macPath, *tlsPath, btcutil.Amount(*maxFee))
 	if err != nil {
 		panic(err)
 	}
 
-	server := fuse.New(*client)
+	server := fuse.New(*client, lightning.Network(*network))
 	http.ListenAndServe(":1000", server)
 }

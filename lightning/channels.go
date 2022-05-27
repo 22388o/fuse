@@ -51,7 +51,7 @@ func parseLightningAddress(address LightningAddress) (Vertex, string, error) {
 }
 
 // OpenChannel connects to a peer if required and opens a channel
-func (l LightningClient) OpenChannel(ctx context.Context, addr LightningAddress, localSats, pushStats btcutil.Amount, private bool) (chainhash.Hash, uint32, error) {
+func (l LightningClient) OpenChannel(ctx context.Context, addr LightningAddress, localSat, pushSat btcutil.Amount, private bool) (chainhash.Hash, uint32, error) {
 
 	pubkey, host, err := parseLightningAddress(addr)
 	if err != nil {
@@ -78,5 +78,5 @@ func (l LightningClient) OpenChannel(ctx context.Context, addr LightningAddress,
 		}
 	}
 
-	return l.provider.OpenChannel(ctx, pubkey, localSats, pushStats, private)
+	return l.provider.OpenChannel(ctx, pubkey, localSat, pushSat, private)
 }

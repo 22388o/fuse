@@ -41,6 +41,10 @@ func parseLightningAddress(address LightningAddress) (Vertex, string, error) {
 	}
 
 	s := strings.Split(string(address), "@")
+	if len(s) != 2 {
+		return [33]byte{}, "", ErrUnknownLightningAddressFormat
+	}
+
 	var pubkey Vertex
 	copy(pubkey[:], s[0])
 	return pubkey, s[1], nil

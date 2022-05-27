@@ -7,11 +7,14 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/lightninglabs/lndclient"
 	"github.com/lightningnetwork/lnd/lnrpc/invoicesrpc"
 	"github.com/lightningnetwork/lnd/lntypes"
 	"github.com/lightningnetwork/lnd/lnwire"
+	"github.com/lightningnetwork/lnd/routing/route"
 	"github.com/mdedys/fuse/lightning"
 )
 
@@ -24,6 +27,10 @@ type lnd interface {
 	AddInvoice(ctx context.Context, in *invoicesrpc.AddInvoiceData) (lntypes.Hash, string, error)
 	PayInvoice(ctx context.Context, invoice string, maxFee btcutil.Amount, outgoingChannel *uint64) chan lndclient.PaymentResult
 	WalletBalance(ctx context.Context) (*lndclient.WalletBalance, error)
+
+	Connect(ctx context.Context, peer route.Vertex, host string, permanent bool) error
+	ListPeers(ctx context.Context) ([]lndclient.Peer, error)
+	OpenChannel(ctx context.Context, peer route.Vertex, localSat, pushSat btcutil.Amount, private bool) (*wire.OutPoint, error)
 }
 
 type LndClient struct {
@@ -40,7 +47,7 @@ func (c LndClient) WalletBalance(ctx context.Context) (btcutil.Amount, error) {
 	return balance.Confirmed, nil
 }
 
-func (c LndClient) Pay(ctx context.Context, invoice lightning.Invoice) (lightning.PaymentResult, error) {
+func (c LndClient) PayInvoice(ctx context.Context, invoice lightning.Invoice) (lightning.PaymentResult, error) {
 	result := <-c.lnd.PayInvoice(ctx, invoice.Encoded, c.maxFee, nil)
 	if result.Err != nil {
 		return lightning.PaymentResult{}, result.Err
@@ -68,6 +75,22 @@ func (c LndClient) AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, me
 	}
 
 	return invoice, nil
+}
+
+func (c LndClient) ListPeers(ctx context.Context) ([]lightning.Peer, error) {
+	_, err := c.lnd.ListPeers(ctx)
+	if err != nil {
+		return []lightning.Peer{}, err
+	}
+	return []lightning.Peer{}, nil
+}
+
+func (c LndClient) ConnectPeer(ctx context.Context, peer lightning.Vertex, host string) error {
+	return errors.New("Not Implemented")
+}
+
+func (c LndClient) OpenChannel(ctx context.Context, peer lightning.Vertex, localSat, pushSat btcutil.Amount, private bool) (chainhash.Hash, uint32, error) {
+	return chainhash.Hash{}, 0, errors.New("Not Implemented")
 }
 
 func connect(address, network, macPath, tlsPath string) (lndclient.LightningClient, error) {

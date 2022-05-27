@@ -3,9 +3,7 @@ package lightning
 import (
 	"errors"
 
-	"github.com/btcsuite/btcutil"
 	"github.com/lightningnetwork/lnd/zpay32"
-	"github.com/rs/zerolog/log"
 )
 
 type Invoice struct {
@@ -13,9 +11,8 @@ type Invoice struct {
 	Decoded zpay32.Invoice
 }
 
+// DecodeInvoice takes in a encoded bolt11 invoice and decodes the invoice into its parts
 func DecodeInvoice(encoded string, network Network) (Invoice, error) {
-
-	log.Info().Msg(string(network))
 
 	cp, err := network.ChainParams()
 	if err != nil {
@@ -33,9 +30,4 @@ func DecodeInvoice(encoded string, network Network) (Invoice, error) {
 	}
 
 	return invoice, nil
-}
-
-type PaymentResult struct {
-	PreImage [32]byte
-	PaidFee  btcutil.Amount
 }

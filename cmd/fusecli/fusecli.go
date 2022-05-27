@@ -27,7 +27,7 @@ func main() {
 		ShortHelp:  "check balance of wallet",
 		LongHelp:   "Check balance of wallet",
 		Exec: func(ctx context.Context, args []string) error {
-			resp, err := http.Get("http://localhost:1000/balance")
+			resp, err := http.Get("http://localhost:1100/balance")
 			if err != nil {
 				return err
 			}
@@ -64,7 +64,7 @@ func main() {
 				return err
 			}
 
-			resp, err := http.Post("http://localhost:1000/invoices", "application/json", &buf)
+			resp, err := http.Post("http://localhost:1100/invoices", "application/json", &buf)
 			if err != nil {
 				return err
 			}
@@ -99,7 +99,7 @@ func main() {
 				return err
 			}
 
-			resp, err := http.Post("http://localhost:1000/pay", "application/json", &buf)
+			resp, err := http.Post("http://localhost:1100/pay", "application/json", &buf)
 			if err != nil {
 				return err
 			}

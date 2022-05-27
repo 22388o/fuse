@@ -2,13 +2,15 @@
 
 set -euo pipefail
 
+BTC_CONTAINER=${1:-bitcoind}
+
 # standard options for lncli and bitcoin-cli
 LNCLI="lncli --lnddir=/lnd -n regtest"
 BITCOINCLI="bitcoin-cli -chain=regtest -rpcuser=regtest -rpcpassword=regtest -rpcwait"
 
 # run a command in a docker compose managed container
-CONTAINER_EXEC="docker-compose exec -T"
-BITCOIND_CMD="${CONTAINER_EXEC} bitcoind ${BITCOINCLI}"
+CONTAINER_EXEC="docker exec"
+BITCOIND_CMD="${CONTAINER_EXEC} ${BTC_CONTAINER} ${BITCOINCLI}"
 
 # mine $1 blocks to $2 address
 mine () {
@@ -51,6 +53,6 @@ fund_lnd () {
 ${BITCOIND_CMD} createwallet regtest > /dev/null 2>&1 || ${BITCOIND_CMD} loadwallet regtest > /dev/null 2>&1 || true
 mine 401 $(${BITCOIND_CMD} getnewaddress)
 
-fund_lnd "lnd"
+fund_lnd "fuse_lnd"
 
 exit 0

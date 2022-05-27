@@ -9,13 +9,14 @@ import (
 	"github.com/mdedys/fuse/lightning"
 	"github.com/mdedys/fuse/lnd"
 	"github.com/mdedys/fuse/logging"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
 
 	var (
 		flags      = flag.NewFlagSet("fuse", flag.ExitOnError)
-		lndAddress = flags.String("lnd-address", "localhost:10002", "Address of LND Node")
+		lndAddress = flags.String("lnd-address", "localhost:1000", "Address of LND Node")
 		network    = flags.String("btc-network", "regtest", "Bitcoin network to use")
 		macPath    = flags.String("mac-path", "./.fuse/admin.macaroon", "Admin macaroon path")
 		tlsPath    = flags.String("tls-path", "./.fuse/tls.cert", "TLS cert path")
@@ -24,11 +25,18 @@ func main() {
 
 	logging.Configure()
 
+	log.Info().Msg("Starting fuse setup")
+
 	client, err := lnd.NewClient(*lndAddress, *network, *macPath, *tlsPath, btcutil.Amount(*maxFee))
 	if err != nil {
 		panic(err)
 	}
 
-	server := fuse.New(*client, lightning.Network(*network))
-	http.ListenAndServe(":1000", server)
+	log.Info().Msg("Lightning Node connection successful")
+
+	provider := lightning.New(*client)
+	server := fuse.New(provider, lightning.Network(*network))
+
+	log.Info().Msg("Starting server on PORT: 1100")
+	http.ListenAndServe(":1100", server)
 }

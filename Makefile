@@ -13,7 +13,7 @@ network_down:
 
 .PHONY: start_lnd
 start_lnd:
-	docker-compose -f ./docker-compose.lnd.yml --env-file ./.env up -d 
+	docker-compose -f ./docker-compose.lnd.yml --env-file ./.env up -d  && make get_lnd_creds
 
 .PHONY: stop_lnd
 stop_lnd:

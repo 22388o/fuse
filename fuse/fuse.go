@@ -1,8 +1,6 @@
 package fuse
 
 import (
-	"encoding/hex"
-	"errors"
 	"net/http"
 
 	"github.com/btcsuite/btcutil"
@@ -12,7 +10,6 @@ import (
 	"github.com/lightningnetwork/lnd/lnwire"
 	"github.com/mdedys/fuse/api"
 	"github.com/mdedys/fuse/lightning"
-	"github.com/mdedys/fuse/lnd"
 )
 
 type Fuse struct {
@@ -20,6 +17,14 @@ type Fuse struct {
 	network   lightning.Network
 }
 
+// repsondWithJSON creates a successful json response
+func respondWithJSON(w http.ResponseWriter, r *http.Request, code int, v render.Renderer) {
+	render.SetContentType(render.ContentTypeJSON)
+	render.Status(r, code)
+	render.Render(w, r, v)
+}
+
+// GetBalance retrieves the wallet balance on the node
 func (f Fuse) GetBalance(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -31,33 +36,7 @@ func (f Fuse) GetBalance(w http.ResponseWriter, r *http.Request) {
 	api.RespondWithJSON(w, 200, balance)
 }
 
-type PayRequest struct {
-	Request string `json:"id"`
-}
-
-func (a *PayRequest) Bind(r *http.Request) error {
-	if a.Request == "" {
-		return errors.New("missing required Request field")
-	}
-	return nil
-}
-
-type PayResponse struct {
-	PreImage string  `json:"preimage"`
-	PaidFee  float64 `json:"paid_fee"`
-}
-
-func (pr *PayResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-func NewPayResponse(result lightning.PaymentResult) *PayResponse {
-	return &PayResponse{
-		PreImage: hex.EncodeToString(result.PreImage[:]),
-		PaidFee:  result.PaidFee.ToUnit(btcutil.AmountSatoshi),
-	}
-}
-
+// Pay pays a lightning invoice
 func (f Fuse) Pay(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -73,7 +52,7 @@ func (f Fuse) Pay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := f.lightning.Pay(ctx, invoice)
+	result, err := f.lightning.PayInvoice(ctx, invoice)
 	if err != nil {
 		render.Render(w, r, ErrInternalServerError(err))
 		return
@@ -83,30 +62,7 @@ func (f Fuse) Pay(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, NewPayResponse(result))
 }
 
-type CreateInvoiceRequest struct {
-	Amount int64  `json:"amount"`
-	Memo   string `json:"memo"`
-}
-
-func (i *CreateInvoiceRequest) Bind(r *http.Request) error {
-	if i.Amount <= 0 {
-		return errors.New("invalid amount set for invoice")
-	}
-	return nil
-}
-
-type CreateInvoiceResponse struct {
-	Invoice string `json:"invoice"`
-}
-
-func (cir *CreateInvoiceResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-func NewInvoiceResponse(i lightning.Invoice) *CreateInvoiceResponse {
-	return &CreateInvoiceResponse{Invoice: i.Encoded}
-}
-
+// CreateInvoice creates a bolt11 invoice
 func (f Fuse) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -122,11 +78,29 @@ func (f Fuse) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render.Status(r, http.StatusCreated)
-	render.Render(w, r, NewInvoiceResponse(invoice))
+	respondWithJSON(w, r, http.StatusCreated, NewInvoiceResponse(invoice))
 }
 
-func New(lightning lnd.LndClient, network lightning.Network) *chi.Mux {
+// OpenChannel opens a lightning network channel
+func (f Fuse) OpenChannel(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	payload := &OpenChannelRequest{}
+	if err := render.Bind(r, payload); err != nil {
+		render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	hash, idx, err := f.lightning.OpenChannel(ctx, payload.Addr, btcutil.Amount(payload.LocalAmount), btcutil.Amount(payload.PushAmount), false)
+	if err != nil {
+		render.Render(w, r, ErrInternalServerError(err))
+		return
+	}
+
+	respondWithJSON(w, r, http.StatusCreated, NewOpenChannelResponse(hash, idx))
+}
+
+func New(lightning lightningService, network lightning.Network) *chi.Mux {
 	f := Fuse{
 		lightning: lightning,
 		network:   network,

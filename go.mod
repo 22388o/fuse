@@ -11,6 +11,7 @@ require (
 	github.com/lightninglabs/lndclient v0.14.2-2
 	github.com/lightningnetwork/lnd v0.14.2-beta
 	github.com/peterbourgon/ff/v3 v3.1.2
+	github.com/rs/zerolog v1.26.1
 )
 
 require (
@@ -85,7 +86,6 @@ require (
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/rogpeppe/fastuuid v1.2.0 // indirect
-	github.com/rs/zerolog v1.26.1 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/rs/zerolog/log"
 )
 
 type ErrReponse struct {
@@ -29,6 +30,7 @@ func ErrInvalidRequest(err error) render.Renderer {
 }
 
 func ErrInternalServerError(err error) render.Renderer {
+	log.Error().Err(err).Msg("Internal server error.")
 	return &ErrReponse{
 		Err:            err,
 		HTTPStatusCode: 500,

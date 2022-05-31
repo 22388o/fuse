@@ -78,19 +78,37 @@ func (c LndClient) AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, me
 }
 
 func (c LndClient) ListPeers(ctx context.Context) ([]lightning.Peer, error) {
-	_, err := c.lnd.ListPeers(ctx)
+	lndPeers, err := c.lnd.ListPeers(ctx)
 	if err != nil {
 		return []lightning.Peer{}, err
 	}
-	return []lightning.Peer{}, nil
+
+	var peers []lightning.Peer
+
+	for _, p := range lndPeers {
+		peers = append(peers, lightning.Peer{
+			Address:  p.Address,
+			Inbound:  p.Inbound,
+			PingTime: p.PingTime,
+			Pubkey:   lightning.Vertex(p.Pubkey),
+			Sent:     p.Sent,
+			Received: p.Received,
+		})
+	}
+
+	return peers, nil
 }
 
 func (c LndClient) ConnectPeer(ctx context.Context, peer lightning.Vertex, host string) error {
-	return errors.New("Not Implemented")
+	return c.lnd.Connect(ctx, route.Vertex(peer), host, true)
 }
 
 func (c LndClient) OpenChannel(ctx context.Context, peer lightning.Vertex, localSat, pushSat btcutil.Amount, private bool) (chainhash.Hash, uint32, error) {
-	return chainhash.Hash{}, 0, errors.New("Not Implemented")
+	result, err := c.lnd.OpenChannel(ctx, route.Vertex(peer), localSat, pushSat, private)
+	if err != nil {
+		return chainhash.Hash{}, 0, err
+	}
+	return result.Hash, result.Index, nil
 }
 
 func connect(address, network, macPath, tlsPath string) (lndclient.LightningClient, error) {

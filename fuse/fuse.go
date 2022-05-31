@@ -111,6 +111,7 @@ func New(lightning lightningService, network lightning.Network) *chi.Mux {
 	r.Get("/balance", f.GetBalance)
 	r.Post("/pay", f.Pay)
 	r.Post("/invoices", f.CreateInvoice)
+	r.Post("/channels", f.OpenChannel)
 
 	return r
 }

@@ -2,6 +2,7 @@ package lightning
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"regexp"
 	"strings"
@@ -14,7 +15,9 @@ import (
 // Lightning address of the peer, in the format <pubkey>@host
 type LightningAddress string
 
-type Vertex [33]byte
+const VertexSize = 33
+
+type Vertex [VertexSize]byte
 
 type Peer struct {
 	Address  string
@@ -31,22 +34,36 @@ var (
 
 var (
 	ErrUnknownLightningAddressFormat = errors.New("address provided does not match format <pubkey>@<host>")
+	ErrInvalidPubKeyLength           = errors.New("invalid pubkey length")
 )
 
 // parseLightningAddress takes in a lightning address in format <pubkey>@<host> and parses it into its parts
 func parseLightningAddress(address LightningAddress) (Vertex, string, error) {
 	matched, err := regexp.MatchString(lightningAddressRegex, string(address))
 	if !matched || err != nil {
-		return [33]byte{}, "", ErrUnknownLightningAddressFormat
+		return [VertexSize]byte{}, "", ErrUnknownLightningAddressFormat
 	}
 
 	s := strings.Split(string(address), "@")
 	if len(s) != 2 {
-		return [33]byte{}, "", ErrUnknownLightningAddressFormat
+		return [VertexSize]byte{}, "", ErrUnknownLightningAddressFormat
+	}
+
+	if len(s[0]) != VertexSize*2 {
+		return [VertexSize]byte{}, "", ErrInvalidPubKeyLength
+	}
+
+	vertex, err := hex.DecodeString(s[0])
+	if err != nil {
+		return [VertexSize]byte{}, "", err
+	}
+
+	if len(vertex) != VertexSize {
+		return [VertexSize]byte{}, "", ErrInvalidPubKeyLength
 	}
 
 	var pubkey Vertex
-	copy(pubkey[:], s[0])
+	copy(pubkey[:], vertex)
 	return pubkey, s[1], nil
 }
 
@@ -65,7 +82,7 @@ func (l LightningClient) OpenChannel(ctx context.Context, addr LightningAddress,
 
 	connected := false
 	for _, peer := range peers {
-		if peer.Address == host && peer.Pubkey == pubkey {
+		if peer.Pubkey == pubkey {
 			connected = true
 			break
 		}

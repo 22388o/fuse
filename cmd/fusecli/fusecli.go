@@ -170,12 +170,36 @@ func main() {
 		},
 	}
 
+	listChannels := &ffcli.Command{
+		Name:       "ls",
+		ShortUsage: "fusecli channels ls",
+		ShortHelp:  "list channels",
+		LongHelp:   "List all channels from lnd node",
+		Exec: func(ctx context.Context, args []string) error {
+			resp, err := http.Get("http://localhost:1100/channels")
+			if err != nil {
+				return err
+			}
+
+			defer resp.Body.Close()
+
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintln(os.Stdout, string(body))
+
+			return nil
+		},
+	}
+
 	channels := &ffcli.Command{
 		Name:        "channels",
 		ShortUsage:  "fusecli channels <sub-command>",
 		ShortHelp:   "commands to manage channels",
 		LongHelp:    "Manage channels on the lightning network",
-		Subcommands: []*ffcli.Command{openChannel},
+		Subcommands: []*ffcli.Command{openChannel, listChannels},
 		Exec:        noop,
 	}
 

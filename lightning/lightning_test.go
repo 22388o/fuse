@@ -14,9 +14,10 @@ type mockLightningProvider struct {
 	addInvoice func(ctx context.Context, value lnwire.MilliSatoshi, memo string) (Invoice, error)
 	payInvoice func(ctx context.Context, invoice Invoice) (PaymentResult, error)
 
-	listPeers   func(ctx context.Context) ([]Peer, error)
-	connectPeer func(ctx context.Context, peer Vertex, host string) error
-	openChannel func(ctx context.Context, peer Vertex, localSat, pushSat btcutil.Amount, private bool) (chainhash.Hash, uint32, error)
+	listPeers    func(ctx context.Context) ([]Peer, error)
+	connectPeer  func(ctx context.Context, peer Vertex, host string) error
+	openChannel  func(ctx context.Context, peer Vertex, localSat, pushSat btcutil.Amount, private bool) (chainhash.Hash, uint32, error)
+	listChannels func(ctx context.Context, active, public bool) ([]Channel, error)
 }
 
 func (m mockLightningProvider) WalletBalance(ctx context.Context) (btcutil.Amount, error) {
@@ -59,4 +60,11 @@ func (m mockLightningProvider) OpenChannel(ctx context.Context, peer Vertex, loc
 		return m.openChannel(ctx, peer, localSat, pushSat, private)
 	}
 	return chainhash.Hash{}, 0, nil
+}
+
+func (m mockLightningProvider) ListChannels(ctx context.Context, active, public bool) ([]Channel, error) {
+	if m.listChannels != nil {
+		return m.listChannels(ctx, active, public)
+	}
+	return []Channel{}, nil
 }

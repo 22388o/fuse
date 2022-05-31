@@ -16,10 +16,13 @@ type LightningProvider interface {
 	AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, memo string) (Invoice, error)
 	PayInvoice(ctx context.Context, invoice Invoice) (PaymentResult, error)
 
-	// Channels
+	// Peers
 	ListPeers(ctx context.Context) ([]Peer, error)
 	ConnectPeer(ctx context.Context, peer Vertex, host string) error
+
+	// Channels
 	OpenChannel(ctx context.Context, peer Vertex, localSat, pushSat btcutil.Amount, private bool) (chainhash.Hash, uint32, error)
+	ListChannels(ctx context.Context, active, public bool) ([]Channel, error)
 }
 
 type LightningClient struct {

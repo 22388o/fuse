@@ -31,6 +31,7 @@ type lnd interface {
 	Connect(ctx context.Context, peer route.Vertex, host string, permanent bool) error
 	ListPeers(ctx context.Context) ([]lndclient.Peer, error)
 	OpenChannel(ctx context.Context, peer route.Vertex, localSat, pushSat btcutil.Amount, private bool) (*wire.OutPoint, error)
+	ListChannels(ctx context.Context, activeOnly, publicOnly bool) ([]lndclient.ChannelInfo, error)
 }
 
 type LndClient struct {
@@ -109,6 +110,28 @@ func (c LndClient) OpenChannel(ctx context.Context, peer lightning.Vertex, local
 		return chainhash.Hash{}, 0, err
 	}
 	return result.Hash, result.Index, nil
+}
+
+func (c LndClient) ListChannels(ctx context.Context, activeOnly, publicOnly bool) ([]lightning.Channel, error) {
+	lndChannels, err := c.lnd.ListChannels(ctx, activeOnly, publicOnly)
+	if err != nil {
+		return []lightning.Channel{}, err
+	}
+
+	var channels []lightning.Channel
+	for _, c := range lndChannels {
+		channels = append(channels, lightning.Channel{
+			ID:            c.ChannelID,
+			Capacity:      c.Capacity,
+			LocalBalance:  c.LocalBalance,
+			RemoteBalance: c.RemoteBalance,
+			Active:        c.Active,
+			Private:       c.Private,
+			RemotePubkey:  lightning.Vertex(c.PubKeyBytes),
+		})
+	}
+
+	return channels, nil
 }
 
 func connect(address, network, macPath, tlsPath string) (lndclient.LightningClient, error) {

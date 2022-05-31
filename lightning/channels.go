@@ -37,6 +37,16 @@ var (
 	ErrInvalidPubKeyLength           = errors.New("invalid pubkey length")
 )
 
+type Channel struct {
+	ID            uint64
+	Capacity      btcutil.Amount
+	LocalBalance  btcutil.Amount
+	RemoteBalance btcutil.Amount
+	Active        bool
+	Private       bool
+	RemotePubkey  Vertex
+}
+
 // parseLightningAddress takes in a lightning address in format <pubkey>@<host> and parses it into its parts
 func parseLightningAddress(address LightningAddress) (Vertex, string, error) {
 	matched, err := regexp.MatchString(lightningAddressRegex, string(address))
@@ -96,4 +106,8 @@ func (l LightningClient) OpenChannel(ctx context.Context, addr LightningAddress,
 	}
 
 	return l.provider.OpenChannel(ctx, pubkey, localSat, pushSat, private)
+}
+
+func (l LightningClient) ListChannels(ctx context.Context, active, public bool) ([]Channel, error) {
+	return l.provider.ListChannels(ctx, active, public)
 }

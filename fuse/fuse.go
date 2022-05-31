@@ -100,6 +100,18 @@ func (f Fuse) OpenChannel(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, r, http.StatusCreated, NewOpenChannelResponse(hash, idx))
 }
 
+func (f Fuse) ListChannels(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	channels, err := f.lightning.ListChannels(ctx, false, false)
+	if err != nil {
+		render.Render(w, r, ErrInternalServerError(err))
+		return
+	}
+
+	respondWithJSON(w, r, http.StatusOK, NewListChannelsResponse(channels))
+}
+
 func New(lightning lightningService, network lightning.Network) *chi.Mux {
 	f := Fuse{
 		lightning: lightning,
@@ -111,7 +123,11 @@ func New(lightning lightningService, network lightning.Network) *chi.Mux {
 	r.Get("/balance", f.GetBalance)
 	r.Post("/pay", f.Pay)
 	r.Post("/invoices", f.CreateInvoice)
-	r.Post("/channels", f.OpenChannel)
+
+	r.Route("/channels", func(r chi.Router) {
+		r.Post("/", f.OpenChannel)
+		r.Get("/", f.ListChannels)
+	})
 
 	return r
 }

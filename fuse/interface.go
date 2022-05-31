@@ -19,4 +19,5 @@ type lightningService interface {
 
 	// Channels
 	OpenChannel(ctx context.Context, addr lightning.LightningAddress, localSats, pushStats btcutil.Amount, private bool) (chainhash.Hash, uint32, error)
+	ListChannels(ctx context.Context, activeOnly, publicOnly bool) ([]lightning.Channel, error)
 }

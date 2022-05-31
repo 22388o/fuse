@@ -16,12 +16,28 @@ network_down:
 # start_lnd: starts lnd node
 .PHONY: start_lnd
 start_lnd:
-	docker-compose -f ./docker-compose.lnd.yml --env-file ./.env up -d  && make get_lnd_creds
+	docker run --network mash_default --name fuse_lnd -d -p 1000:10009 -p 1001:9735 fuse_lnd:latest /bin/bash lnd --lnddir=/lnd \
+		--rpclisten=0.0.0.0 \
+		--restlisten=0.0.0.0 \
+		--listen=0.0.0.0 \
+		--nobootstrap \
+		--noseedbackup \
+		--debuglevel=info \
+		--tlsextradomain=lnd \
+		--bitcoin.active \
+		--bitcoin.regtest \
+		--bitcoin.node=bitcoind \
+		--bitcoind.rpchost=bitcoind:18443 \
+		--bitcoind.rpcuser=regtest \
+		--bitcoind.rpcpass=regtest \
+		--bitcoind.zmqpubrawblock=bitcoind:12005 \
+		--bitcoind.zmqpubrawtx=bitcoind:12006
 
 # stop_lnd: stops lnd node
 .PHONY: stop_lnd
 stop_lnd:
-	docker-compose -f ./docker-compose.lnd.yml down
+	docker stop fuse_lnd
+	docker rm fuse_lnd
 
 # fund: funds local lnd node
 .PHONY: fund

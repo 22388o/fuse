@@ -37,3 +37,4 @@ go.work
 .fuse
 bin
 .env
+__debug_bin

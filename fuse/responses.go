@@ -2,11 +2,13 @@ package fuse
 
 import (
 	"encoding/hex"
+	"errors"
 	"net/http"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	"github.com/mdedys/fuse/lightning"
+	"github.com/mdedys/fuse/lnurl"
 )
 
 type CreateInvoiceResponse struct {
@@ -103,17 +105,43 @@ func NewLNURLPCodeResponse(code string) *CreateLNURLPCodeResponse {
 	return &CreateLNURLPCodeResponse{code}
 }
 
-// type LNURLPResponse struct {
-// 	Callback    string `json:"callback"`
-// 	MaxSendable int64  `json:"maxSendable"`
-// 	MinSendable int64  `json:"minSendable"`
-// 	Metadata    string `json:"metadata"`
-// 	Tag         string `json:"tag"`
-// }
+type LNURLPResponse struct {
+	Callback    string `json:"callback"`
+	MaxSendable int64  `json:"maxSendable"`
+	MinSendable int64  `json:"minSendable"`
+	Metadata    string `json:"metadata"`
+	Tag         string `json:"tag"`
+}
 
-// func (l *LNURLPResponse) Render(w http.ResponseWriter, r *http.Request) error {
-// 	if l.MaxSendable < l.MinSendable {
-// 		return errors.New("maxSendable must be larger than minSendable")
-// 	}
-// 	return nil
-// }
+func (l *LNURLPResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	if l.MaxSendable < l.MinSendable {
+		return errors.New("maxSendable must be larger than minSendable")
+	}
+	return nil
+}
+
+func NewLNURLPResponse(callback string, min int64, max int64, metadata lnurl.Metadata, tag string) *LNURLPResponse {
+	return &LNURLPResponse{
+		Callback:    callback,
+		MinSendable: min,
+		MaxSendable: max,
+		Metadata:    metadata.Encode(),
+		Tag:         tag,
+	}
+}
+
+type LNURLPCallbackResponse struct {
+	PR     string   `json:"pr"`
+	Routes []string `json:"routes"`
+}
+
+func (l *LNURLPCallbackResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+func NewLNURLPCallbackResponse(invoice lightning.Invoice) *LNURLPCallbackResponse {
+	return &LNURLPCallbackResponse{
+		PR:     invoice.Encoded,
+		Routes: []string{},
+	}
+}

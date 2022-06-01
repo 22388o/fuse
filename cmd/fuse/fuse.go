@@ -8,6 +8,7 @@ import (
 	"github.com/mdedys/fuse/fuse"
 	"github.com/mdedys/fuse/lightning"
 	"github.com/mdedys/fuse/lnd"
+	"github.com/mdedys/fuse/lnurl"
 	"github.com/mdedys/fuse/logging"
 	"github.com/rs/zerolog/log"
 )
@@ -32,10 +33,12 @@ func main() {
 		panic(err)
 	}
 
+	store := lnurl.NewStore()
+
 	log.Info().Msg("Lightning Node connection successful")
 
 	provider := lightning.New(*client)
-	server := fuse.New(provider, lightning.Network(*network))
+	server := fuse.New(provider, lightning.Network(*network), store)
 
 	log.Info().Msg("Starting server on PORT: 1100")
 	http.ListenAndServe(":1100", server)

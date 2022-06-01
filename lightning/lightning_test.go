@@ -11,7 +11,7 @@ import (
 type mockLightningProvider struct {
 	walletBalance func(ctx context.Context) (btcutil.Amount, error)
 
-	addInvoice func(ctx context.Context, value lnwire.MilliSatoshi, memo string) (Invoice, error)
+	addInvoice func(ctx context.Context, value lnwire.MilliSatoshi, memo string, hhash []byte) (Invoice, error)
 	payInvoice func(ctx context.Context, invoice Invoice) (PaymentResult, error)
 
 	listPeers    func(ctx context.Context) ([]Peer, error)
@@ -27,9 +27,9 @@ func (m mockLightningProvider) WalletBalance(ctx context.Context) (btcutil.Amoun
 	return btcutil.Amount(0), nil
 }
 
-func (m mockLightningProvider) AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, memo string) (Invoice, error) {
+func (m mockLightningProvider) AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, memo string, hhash []byte) (Invoice, error) {
 	if m.addInvoice != nil {
-		return m.addInvoice(ctx, value, memo)
+		return m.addInvoice(ctx, value, memo, hhash)
 	}
 	return Invoice{}, nil
 }

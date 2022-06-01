@@ -13,8 +13,8 @@ type PaymentResult struct {
 }
 
 // AddInvoice creates a bolt11 invoice
-func (l LightningClient) AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, memo string) (Invoice, error) {
-	return l.provider.AddInvoice(ctx, value, memo)
+func (l LightningClient) AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, memo string, hhash []byte) (Invoice, error) {
+	return l.provider.AddInvoice(ctx, value, memo, hhash)
 }
 
 // PayInvoice pays lightning invoice

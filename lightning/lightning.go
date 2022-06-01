@@ -13,7 +13,7 @@ type LightningProvider interface {
 	WalletBalance(ctx context.Context) (btcutil.Amount, error)
 
 	// Invoices
-	AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, memo string) (Invoice, error)
+	AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, memo string, hhash []byte) (Invoice, error)
 	PayInvoice(ctx context.Context, invoice Invoice) (PaymentResult, error)
 
 	// Peers

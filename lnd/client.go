@@ -61,9 +61,14 @@ func (c LndClient) PayInvoice(ctx context.Context, invoice lightning.Invoice) (l
 	return lightning.PaymentResult{PreImage: result.Preimage, PaidFee: result.PaidFee}, nil
 }
 
-func (c LndClient) AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, memo string) (lightning.Invoice, error) {
+func (c LndClient) AddInvoice(ctx context.Context, value lnwire.MilliSatoshi, memo string, hhash []byte) (lightning.Invoice, error) {
 
-	data := &invoicesrpc.AddInvoiceData{Memo: memo, Value: value}
+	data := &invoicesrpc.AddInvoiceData{Value: value}
+	if len(hhash) > 0 {
+		data.DescriptionHash = hhash
+	} else {
+		data.Memo = memo
+	}
 
 	_, encoded, err := c.lnd.AddInvoice(ctx, data)
 	if err != nil {

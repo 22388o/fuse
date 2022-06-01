@@ -38,3 +38,17 @@ func ErrInternalServerError(err error) render.Renderer {
 		ErrorText:      err.Error(),
 	}
 }
+
+type LNURLErrorResponse struct {
+	Status string `json:"status"`
+	Reason string `json:"reason"`
+}
+
+func (e *LNURLErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, http.StatusBadRequest)
+	return nil
+}
+
+func ErrLNURLRequestError(reason error) render.Renderer {
+	return &LNURLErrorResponse{Status: "ERROR", Reason: reason.Error()}
+}

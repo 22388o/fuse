@@ -1,9 +1,12 @@
 package fuse
 
 import (
+	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/btcsuite/btcutil"
 	"github.com/go-chi/chi/v5"
@@ -18,6 +21,7 @@ import (
 type Fuse struct {
 	lightning lightningService
 	network   lightning.Network
+	store     inMemoryStore
 }
 
 // repsondWithJSON creates a successful json response
@@ -75,7 +79,7 @@ func (f Fuse) CreateInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	invoice, err := f.lightning.AddInvoice(ctx, lnwire.NewMSatFromSatoshis(btcutil.Amount(payload.Amount)), payload.Memo)
+	invoice, err := f.lightning.AddInvoice(ctx, lnwire.NewMSatFromSatoshis(btcutil.Amount(payload.Amount)), payload.Memo, []byte{})
 	if err != nil {
 		render.Render(w, r, ErrInternalServerError(err))
 		return
@@ -123,7 +127,7 @@ func (f Fuse) CreateLNURLPCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := fmt.Sprintf("http://localhost:1100/lnurlp?min=%v&max=%v", payload.MinSendable, payload.MaxSendable)
+	url := fmt.Sprintf("http://localhost:1100/lnurlp?id=%v&min=%v&max=%v", lnurl.RandomK1(), payload.MinSendable, payload.MaxSendable)
 	code, err := lnurl.CreateBech32Code(url)
 	if err != nil {
 		render.Render(w, r, ErrInternalServerError(err))
@@ -134,17 +138,70 @@ func (f Fuse) CreateLNURLPCode(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f Fuse) HandleLNURLP(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, ErrInternalServerError(errors.New("NOT IMPLEMENTED")))
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		render.Render(w, r, ErrLNURLRequestError(errors.New("missing payment request identifier")))
+		return
+	}
+
+	min, err := strconv.ParseInt(r.URL.Query().Get("min"), 10, 64)
+	if err != nil {
+		render.Render(w, r, ErrLNURLRequestError(err))
+		return
+	}
+
+	max, err := strconv.ParseInt(r.URL.Query().Get("max"), 10, 64)
+	if err != nil {
+		render.Render(w, r, ErrLNURLRequestError(err))
+		return
+	}
+
+	img, err := lnurl.GetImage()
+	if err != nil {
+		render.Render(w, r, ErrLNURLRequestError(err))
+		return
+	}
+
+	metadata := lnurl.Metadata{
+		Description: "Fuse LNURL Payment",
+		Image:       img,
+	}
+
+	f.store.Set(id, metadata.Encode())
+
+	render.Render(w, r, NewLNURLPResponse(fmt.Sprintf("http://localhost:1100/lnurlp/callback/%s", id), min, max, metadata, lnurl.TagPayRequst))
 }
 
 func (f Fuse) HandleLNURLPCallback(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, ErrInternalServerError(errors.New("NOT IMPLEMENTED")))
+
+	ctx := context.Background()
+
+	id := chi.URLParam(r, "requestID")
+
+	amount, err := strconv.ParseInt(r.URL.Query().Get("amount"), 10, 64)
+	if err != nil {
+		render.Render(w, r, ErrLNURLRequestError(err))
+		return
+	}
+
+	metadata := f.store.Get(id)
+	hhash := sha256.Sum256([]byte(metadata))
+
+	invoice, err := f.lightning.AddInvoice(ctx, lnwire.MilliSatoshi(amount), "", hhash[:])
+	if err != nil {
+		render.Render(w, r, ErrLNURLRequestError(err))
+		return
+	}
+
+	render.Render(w, r, NewLNURLPCallbackResponse(invoice))
 }
 
-func New(lightning lightningService, network lightning.Network) *chi.Mux {
+func New(lightning lightningService, network lightning.Network, store inMemoryStore) *chi.Mux {
 	f := Fuse{
 		lightning: lightning,
 		network:   network,
+		store:     store,
 	}
 
 	r := chi.NewRouter()
@@ -161,7 +218,7 @@ func New(lightning lightningService, network lightning.Network) *chi.Mux {
 	r.Route("/lnurlp", func(r chi.Router) {
 		r.Post("/", f.CreateLNURLPCode)
 		r.Get("/", f.HandleLNURLP)
-		r.Get("/callback", f.HandleLNURLPCallback)
+		r.Get("/callback/{requestID}", f.HandleLNURLPCallback)
 	})
 
 	return r

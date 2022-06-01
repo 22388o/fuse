@@ -341,7 +341,7 @@ func main() {
 	if err := fuse.ParseAndRun(context.Background(), os.Args[1:]); err != nil {
 		// no need to output redundant message if printing help
 		if err != flag.ErrHelp {
-			fmt.Fprintf(os.Stderr, "mapi: %v\n", err)
+			fmt.Fprintf(os.Stderr, "fusecli: %v\n", err)
 		}
 		os.Exit(1)
 	}

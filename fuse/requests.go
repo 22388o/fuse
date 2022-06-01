@@ -48,3 +48,15 @@ func (ocr *OpenChannelRequest) Bind(r *http.Request) error {
 	}
 	return nil
 }
+
+type CreateLNURLPCodeRequest struct {
+	MinSendable int64 `json:"min_sendable"`
+	MaxSendable int64 `json:"max_sendable"`
+}
+
+func (l *CreateLNURLPCodeRequest) Bind(r *http.Request) error {
+	if l.MaxSendable < l.MinSendable {
+		return errors.New("max_sendable must be larger thenmin_sendable")
+	}
+	return nil
+}

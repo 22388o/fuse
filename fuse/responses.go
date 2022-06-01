@@ -90,3 +90,30 @@ func NewListChannelsResponse(channels []lightning.Channel) *ListChannelsResponse
 
 	return &ListChannelsResponse{chans}
 }
+
+type CreateLNURLPCodeResponse struct {
+	Code string `json:"code"`
+}
+
+func (c *CreateLNURLPCodeResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+func NewLNURLPCodeResponse(code string) *CreateLNURLPCodeResponse {
+	return &CreateLNURLPCodeResponse{code}
+}
+
+// type LNURLPResponse struct {
+// 	Callback    string `json:"callback"`
+// 	MaxSendable int64  `json:"maxSendable"`
+// 	MinSendable int64  `json:"minSendable"`
+// 	Metadata    string `json:"metadata"`
+// 	Tag         string `json:"tag"`
+// }
+
+// func (l *LNURLPResponse) Render(w http.ResponseWriter, r *http.Request) error {
+// 	if l.MaxSendable < l.MinSendable {
+// 		return errors.New("maxSendable must be larger than minSendable")
+// 	}
+// 	return nil
+// }

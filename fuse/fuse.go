@@ -1,6 +1,8 @@
 package fuse
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/btcsuite/btcutil"
@@ -10,6 +12,7 @@ import (
 	"github.com/lightningnetwork/lnd/lnwire"
 	"github.com/mdedys/fuse/api"
 	"github.com/mdedys/fuse/lightning"
+	"github.com/mdedys/fuse/lnurl"
 )
 
 type Fuse struct {
@@ -112,6 +115,32 @@ func (f Fuse) ListChannels(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, r, http.StatusOK, NewListChannelsResponse(channels))
 }
 
+func (f Fuse) CreateLNURLPCode(w http.ResponseWriter, r *http.Request) {
+
+	payload := &CreateLNURLPCodeRequest{}
+	if err := render.Bind(r, payload); err != nil {
+		render.Render(w, r, ErrInvalidRequest(err))
+		return
+	}
+
+	url := fmt.Sprintf("http://localhost:1100/lnurlp?min=%v&max=%v", payload.MinSendable, payload.MaxSendable)
+	code, err := lnurl.CreateBech32Code(url)
+	if err != nil {
+		render.Render(w, r, ErrInternalServerError(err))
+		return
+	}
+
+	render.Render(w, r, NewLNURLPCodeResponse(code))
+}
+
+func (f Fuse) HandleLNURLP(w http.ResponseWriter, r *http.Request) {
+	render.Render(w, r, ErrInternalServerError(errors.New("NOT IMPLEMENTED")))
+}
+
+func (f Fuse) HandleLNURLPCallback(w http.ResponseWriter, r *http.Request) {
+	render.Render(w, r, ErrInternalServerError(errors.New("NOT IMPLEMENTED")))
+}
+
 func New(lightning lightningService, network lightning.Network) *chi.Mux {
 	f := Fuse{
 		lightning: lightning,
@@ -127,6 +156,12 @@ func New(lightning lightningService, network lightning.Network) *chi.Mux {
 	r.Route("/channels", func(r chi.Router) {
 		r.Post("/", f.OpenChannel)
 		r.Get("/", f.ListChannels)
+	})
+
+	r.Route("/lnurlp", func(r chi.Router) {
+		r.Post("/", f.CreateLNURLPCode)
+		r.Get("/", f.HandleLNURLP)
+		r.Get("/callback", f.HandleLNURLPCallback)
 	})
 
 	return r

@@ -117,6 +117,60 @@ func main() {
 		},
 	}
 
+	lnurlpayNewPaymentRequest := &ffcli.Command{
+		Name:       "new",
+		ShortUsage: "fusecli lnurl-pay new <min> <max>",
+		ShortHelp:  "create lnurlp encoded payment request",
+		LongHelp:   "Create lnurl-pay encoded payment request",
+		Exec: func(ctx context.Context, args []string) error {
+			if len(args) != 2 {
+				return errors.New("new expected 2 args")
+			}
+
+			min, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			max, err := strconv.ParseInt(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			data := fuse.CreateLNURLPCodeRequest{
+				MaxSendable: max,
+				MinSendable: min,
+			}
+
+			var buf bytes.Buffer
+			if err := json.NewEncoder(&buf).Encode(data); err != nil {
+				return err
+			}
+
+			resp, err := http.Post("http://localhost:1100/lnurlp", "application/json", &buf)
+			if err != nil {
+				return err
+			}
+
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintln(os.Stdout, string(body))
+			return nil
+
+		},
+	}
+
+	lnurlpay := &ffcli.Command{
+		Name:        "lnurl-pay",
+		ShortUsage:  "fusecli lnurl-pay <sub-command>",
+		ShortHelp:   "commands to work with lnurlp",
+		LongHelp:    "Commands to interact with lnurl-pay",
+		Subcommands: []*ffcli.Command{lnurlpayNewPaymentRequest},
+		Exec:        noop,
+	}
+
 	var (
 		openChannelFlagSet = flag.NewFlagSet("channels:open", flag.ExitOnError)
 		openChannelAddr    = openChannelFlagSet.String("node", "", "<pubkey>@<host>")
@@ -280,7 +334,7 @@ func main() {
 		ShortHelp:   "client for the Fuse Wallet API",
 		LongHelp:    "",
 		FlagSet:     cliFlagSet,
-		Subcommands: []*ffcli.Command{balance, channels, createInvoice, pay, btcd, lightning},
+		Subcommands: []*ffcli.Command{balance, channels, createInvoice, pay, btcd, lnurlpay, lightning},
 		Exec:        noop,
 	}
 

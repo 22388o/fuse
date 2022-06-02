@@ -19,8 +19,8 @@ func main() {
 		flags      = flag.NewFlagSet("fuse", flag.ExitOnError)
 		lndAddress = flags.String("lnd-address", "localhost:1000", "Address of LND Node")
 		network    = flags.String("btc-network", "regtest", "Bitcoin network to use")
-		macPath    = flags.String("mac-path", "/Users/mikededys/github/fuse/.fuse/admin.macaroon", "Admin macaroon path")
-		tlsPath    = flags.String("tls-path", "/Users/mikededys/github/fuse/.fuse/tls.cert", "TLS cert path")
+		macPath    = flags.String("mac-path", ".fuse/admin.macaroon", "Admin macaroon path")
+		tlsPath    = flags.String("tls-path", ".fuse/tls.cert", "TLS cert path")
 		maxFee     = flags.Int("max-fee", 1000, "Max ln txn fee")
 	)
 

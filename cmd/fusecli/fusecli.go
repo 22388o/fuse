@@ -305,7 +305,7 @@ func main() {
 				return errors.New("mine takes 1 arg")
 			}
 
-			str := fmt.Sprintf("docker exec -t %s /bin/bash -c \"bitcoin-cli -chain=regtest -rpcuser=regtest -rpcpassword=regtest -rpcwait\" generatetoaddress %v %v", *btcNode, *blocks, args[0])
+			str := fmt.Sprintf("docker exec -t %s /bin/bash -c \"bitcoin-cli -chain=regtest -rpcuser=regtest -rpcpassword=regtest -rpcwait generatetoaddress %v %v\"", *btcNode, *blocks, args[0])
 			cmd := exec.Command("/bin/sh", "-c", str)
 
 			output, err := cmd.CombinedOutput()

@@ -6,7 +6,7 @@ start:
 ## network_up: starts local lnd + bitcoin node
 .PHONY: network_up
 network_up:
-	@docker-compose up -d --build && make fund && make get_lnd_creds
+	@docker-compose up -d --build && make get_lnd_creds
 
 ## network_down: stops local lnd + bitcoin node
 .PHONY: network_down
@@ -49,8 +49,8 @@ fund:
 get_lnd_creds:
 	rm -rf ./.fuse
 	mkdir ./.fuse
-	docker cp fuse_lnd:/lnd/tls.cert ./.fuse/tls.cert
-	docker cp fuse_lnd:/lnd/data/chain/bitcoin/regtest/admin.macaroon ./.fuse/admin.macaroon
+	docker cp fuse_lnd:/root/.lnd/tls.cert ./.fuse/tls.cert
+	docker cp fuse_lnd:/root/.lnd/data/chain/bitcoin/regtest/admin.macaroon ./.fuse/admin.macaroon
 
 ## fusecli: installs the fuse cli client at bin/mapi
 .PHONY: fusecli

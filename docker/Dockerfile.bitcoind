@@ -17,4 +17,4 @@ FROM bitcoind-base AS bitcoind
 
 RUN mkdir /bitcoind
 
-ENTRYPOINT ["bitcoind", "-datadir=/bitcoind", "-server", "-txindex"]
+ENTRYPOINT ["bitcoind", "-datadir=/root/.bitcoin", "-server", "-txindex"]

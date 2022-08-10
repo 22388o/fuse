@@ -5,10 +5,11 @@ ENV GOPATH /go
 WORKDIR $GOPATH/src
 
 ARG LND_VERSION
+
 RUN git clone https://github.com/lightningnetwork/lnd /go/src/github.com/lightningnetwork/lnd \
 &&  cd /go/src/github.com/lightningnetwork/lnd \
 &&  git checkout tags/${LND_VERSION} \
-&&  make && make install tags="signrpc walletrpc chainrpc invoicesrpc"
+&&  make && make install tags="autopilotrpc chainrpc invoicesrpc routerrpc signrpc walletrpc watchtowerrpc wtclientrpc"
 
 FROM ubuntu:focal AS run
 
@@ -21,4 +22,4 @@ ENV PATH $PATH:$GOPATH/bin
 
 RUN mkdir /lnd
 
-ENTRYPOINT ["lnd", "--lnddir=/lnd"]
+ENTRYPOINT ["lnd", "--lnddir=/root/.lnd"]

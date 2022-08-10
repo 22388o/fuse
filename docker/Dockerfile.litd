@@ -1,0 +1,24 @@
+
+FROM golang:1.17 as builder
+
+ENV GOPATH /go
+WORKDIR $GOPATH/src
+
+RUN mkdir /go/src/litd \
+&& cd /go/src/litd \
+&& curl -L -O https://github.com/lightninglabs/lightning-terminal/releases/download/v0.7.0-alpha/lightning-terminal-linux-armv7-v0.7.0-alpha.tar.gz \
+&& tar -xvf lightning-terminal-linux-armv7-v0.7.0-alpha.tar.gz \
+&& cp -a ./lightning-terminal-linux-armv7-v0.7.0-alpha/. /go/bin/
+
+FROM ubuntu:focal AS run
+
+RUN apt update
+
+COPY --from=builder /go /go
+
+ENV GOPATH /go
+ENV PATH $PATH:$GOPATH/bin
+
+RUN mkdir /lnd
+
+ENTRYPOINT ["litd", "--lnd-mode=remote"]

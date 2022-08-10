@@ -22,6 +22,8 @@ type Credentials struct {
 type Configuration struct {
 	Name        string      `yaml:"name"`
 	NodeType    string      `yaml:"nodeType"`
+	Address     string      `yaml:"address"`
+	Network     string      `yaml:"network"`
 	Credentials Credentials `yaml:"credentials"`
 }
 
@@ -61,6 +63,8 @@ func generateConfig() {
 	configuration := Configuration{
 		Name:        "fuse-ln",
 		NodeType:    LND_NODE,
+		Address:     "localhost:1000",
+		Network:     "regtest",
 		Credentials: credentials,
 	}
 
@@ -103,7 +107,7 @@ var configCmd = &cobra.Command{
 	Short: "Manage config file for fusecli",
 }
 
-var getCmd = &cobra.Command{
+var getConfigCmd = &cobra.Command{
 	Use:   "get {config_name}",
 	Short: "Get config information",
 	Long:  `Reads config file and retrieves information about the specified config`,
@@ -128,5 +132,5 @@ var getCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(configCmd)
-	configCmd.AddCommand(getCmd)
+	configCmd.AddCommand(getConfigCmd)
 }
